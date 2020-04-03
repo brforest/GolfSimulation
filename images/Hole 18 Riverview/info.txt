@@ -1,0 +1,4 @@
+1770 px : 715 ft
+2.4755244755 px/ft
+starting point: 341 left, 80 bottom
+center: 340 left
