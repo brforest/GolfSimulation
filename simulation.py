@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+import math as m
 
 hole_length = 380
 pixel_ratio = 7.4265734265
@@ -41,9 +42,15 @@ def calculate_approach_score(fairway, distance):
 
     return statistics[dict_string]
 
+def calculate_dist_to_center(off_line, off_yardage):
+    return m.sqrt(off_line**2 + off_yardage**2)
+
 scores_driver = []
 scores_2i = []
-for i in range(1000):
+distance_from_center_driver = []
+distance_from_center_2i = []
+num_simulations = 1000
+for i in range(num_simulations):
     
     fairway_driver = True
     # get value for driver how far off center of fairway
@@ -81,6 +88,7 @@ for i in range(1000):
     # draw on picture
     # cv2.line(img, (341,height-80), (340,height-80-int(carry_distance_driver*pixel_ratio)), (255,255,255), 15)
     cv2.circle(img, (341+int(off_center_driver*pixel_ratio),height-80-int(carry_distance_driver*pixel_ratio)), 15, color, -1)
+    distance_from_center_driver.append(calculate_dist_to_center(off_center_driver, 300-carry_distance_driver))
 
     fairway_2i = True
     # get value for 2i how far off center of fairway
@@ -110,20 +118,42 @@ for i in range(1000):
     # print("2i score:", score_2i, "\n")
     scores_2i.append(score_2i)
     
-    color = (255,0,0)
+    color = (150,0,0)
     if score_2i > 4.0:
-        color = (0, 255, 0)
+        color = (0, 150, 0)
     elif score_2i < 4.0:
-        color = (0, 0, 255)
+        color = (0, 0, 150)
 
     # draw on picture
     # cv2.line(img, (341,height-80), (340,height-80-int(carry_distance_driver*pixel_ratio)), (255,255,255), 15)
     cv2.circle(img, (341+int(off_center_2i*pixel_ratio),height-80-int(carry_distance_2i*pixel_ratio)), 15, color, -1)
+    distance_from_center_2i.append(calculate_dist_to_center(off_center_2i, 250-carry_distance_2i))
 
 avg_driver_score = sum(scores_driver) / len(scores_driver)
 avg_2i_score = sum(scores_2i) / len(scores_2i)
 print("Average driver score:", avg_driver_score)
 print("Average 2i score:", avg_2i_score)
+# create topographical lines
+# 25%
+# 50%
+# 75%
+# 100%
+distance_from_center_driver.sort()
+distance_from_center_2i.sort()
+# driver first
+first_50 = distance_from_center_driver[int((len(distance_from_center_driver)-1) / 2)]
+first_75 = distance_from_center_driver[int(3 * (len(distance_from_center_driver)-1) / 4)]
+first_98 = distance_from_center_driver[int(98 * (len(distance_from_center_driver) - 1) / 100)]
+cv2.circle(img, (341, height-80-int(300*pixel_ratio)), int(first_50*pixel_ratio), (0,0,0), 10)
+cv2.circle(img, (341, height-80-int(300*pixel_ratio)), int(first_75*pixel_ratio), (0,0,0), 10)
+cv2.circle(img, (341, height-80-int(300*pixel_ratio)), int(first_98*pixel_ratio), (0,0,0), 10)
+# now the 2i
+first_50 = distance_from_center_2i[int((len(distance_from_center_2i)-1) / 2)]
+first_75 = distance_from_center_2i[int(3 * (len(distance_from_center_2i)-1) / 4)]
+first_98 = distance_from_center_2i[int(98 * (len(distance_from_center_2i) - 1) / 100)]
+cv2.circle(img, (341, height-80-int(250*pixel_ratio)), int(first_50*pixel_ratio), (250,250,250), 10)
+cv2.circle(img, (341, height-80-int(250*pixel_ratio)), int(first_75*pixel_ratio), (250,250,250), 10)
+cv2.circle(img, (341, height-80-int(250*pixel_ratio)), int(first_98*pixel_ratio), (250,250,250), 10)
 cv2.imshow('Simulation Results', img)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
