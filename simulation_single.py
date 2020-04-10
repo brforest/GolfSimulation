@@ -1,6 +1,10 @@
 import numpy as np
+import cv2
 
 hole_length = 380
+pixel_ratio = 7.4265734265
+img = cv2.imread('images/Hole 18 Riverview/Hole 18 Riverview.jpg')
+height, width, channels = img.shape
 statistics = {
     "fairway_50-75": 2.95,
     "rough_50-75": 3.0,
@@ -64,6 +68,16 @@ driver_length_to_hole = hole_length - carry_distance_driver
 driver_score += calculate_approach_score(fairway_driver, driver_length_to_hole)
 print("Driver score:", driver_score, "\n")
 
+color = (255,0,0)
+if driver_score > 4.0:
+    color = (0, 255, 0)
+elif driver_score < 4.0:
+    color = (0, 0, 255)
+
+# draw on picture
+# cv2.line(img, (341,height-80), (340,height-80-int(carry_distance_driver*pixel_ratio)), (255,255,255), 15)
+cv2.circle(img, (341+int(off_center_driver*pixel_ratio),height-80-int(carry_distance_driver*pixel_ratio)), 15, color, -1)
+
 fairway_2i = True
 # get value for 2i how far off center of fairway
 off_center_2i = np.random.normal(0, 15)
@@ -90,3 +104,17 @@ if off_center_2i > 50:
 length_to_hole_2i = hole_length - carry_distance_2i
 score_2i += calculate_approach_score(fairway_2i, length_to_hole_2i)
 print("2i score:", score_2i, "\n")
+
+color = (255,0,0)
+if score_2i > 4.0:
+    color = (0, 255, 0)
+elif score_2i < 4.0:
+    color = (0, 0, 255)
+
+# draw on picture
+# cv2.line(img, (341,height-80), (340,height-80-int(carry_distance_driver*pixel_ratio)), (255,255,255), 15)
+cv2.circle(img, (341+int(off_center_2i*pixel_ratio),height-80-int(carry_distance_2i*pixel_ratio)), 15, color, -1)
+
+cv2.imshow('Simulation Results', img)
+cv2.waitKey(0)
+cv2.destroyAllWindows()

@@ -1,4 +1,5 @@
 1770 px : 715 ft
 2.4755244755 px/ft
+7.4265734265 px/yd
 starting point: 341 left, 80 bottom
 center: 340 left
