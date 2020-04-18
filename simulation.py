@@ -1,6 +1,29 @@
 import numpy as np
 import cv2
 import math as m
+import tkinter
+import PIL.Image, PIL.ImageTk
+
+
+class Shot:
+    def __init__(self, club, from_center, off_target, distance_from_average):
+        self.club = club
+        self.from_center = from_center
+        self.off_target = off_target
+        self.distance_from_average = distance_from_average
+    
+    def get_club(self):
+        return self.club
+
+    def get_dist_from_center(self):
+        return self.from_center
+    
+    def get_off_target(self):
+        return self.off_target
+    
+    def get_distance_from_average(self):
+        return self.distance_from_average
+
 
 hole_length = 380
 pixel_ratio = 7.4265734265
@@ -88,7 +111,8 @@ for i in range(num_simulations):
     # draw on picture
     # cv2.line(img, (341,height-80), (340,height-80-int(carry_distance_driver*pixel_ratio)), (255,255,255), 15)
     cv2.circle(img, (341+int(off_center_driver*pixel_ratio),height-80-int(carry_distance_driver*pixel_ratio)), 15, color, -1)
-    distance_from_center_driver.append(calculate_dist_to_center(off_center_driver, 300-carry_distance_driver))
+    new_shot = Shot("driver", calculate_dist_to_center(off_center_driver, 300-carry_distance_driver), off_center_driver, 300-carry_distance_driver)
+    distance_from_center_driver.append(new_shot)
 
     fairway_2i = True
     # get value for 2i how far off center of fairway
@@ -127,7 +151,8 @@ for i in range(num_simulations):
     # draw on picture
     # cv2.line(img, (341,height-80), (340,height-80-int(carry_distance_driver*pixel_ratio)), (255,255,255), 15)
     cv2.circle(img, (341+int(off_center_2i*pixel_ratio),height-80-int(carry_distance_2i*pixel_ratio)), 15, color, -1)
-    distance_from_center_2i.append(calculate_dist_to_center(off_center_2i, 250-carry_distance_2i))
+    new_shot = Shot("2i", calculate_dist_to_center(off_center_2i, 250-carry_distance_2i), off_center_2i, 250-carry_distance_2i)
+    distance_from_center_2i.append(new_shot)
 
 avg_driver_score = sum(scores_driver) / len(scores_driver)
 avg_2i_score = sum(scores_2i) / len(scores_2i)
@@ -138,22 +163,95 @@ print("Average 2i score:", avg_2i_score)
 # 50%
 # 75%
 # 100%
-distance_from_center_driver.sort()
-distance_from_center_2i.sort()
+distance_from_center_driver.sort(key=lambda x: x.from_center)
+distance_from_center_2i.sort(key=lambda x: x.from_center)
+# TODO: find a better way of creating these ellipses???
 # driver first
-first_50 = distance_from_center_driver[int((len(distance_from_center_driver)-1) / 2)]
-first_75 = distance_from_center_driver[int(3 * (len(distance_from_center_driver)-1) / 4)]
-first_98 = distance_from_center_driver[int(98 * (len(distance_from_center_driver) - 1) / 100)]
-cv2.circle(img, (341, height-80-int(300*pixel_ratio)), int(first_50*pixel_ratio), (0,0,0), 10)
-cv2.circle(img, (341, height-80-int(300*pixel_ratio)), int(first_75*pixel_ratio), (0,0,0), 10)
-cv2.circle(img, (341, height-80-int(300*pixel_ratio)), int(first_98*pixel_ratio), (0,0,0), 10)
+first_driver_50 = int(num_simulations/2)
+first_driver_50_shots = distance_from_center_driver[0:first_driver_50]
+first_driver_50_shots.sort(key=lambda x: x.distance_from_average)
+furthest_distance = first_driver_50_shots[first_driver_50-1]
+first_driver_50_distance_from_average_pixels = abs(int(furthest_distance.get_distance_from_average() * pixel_ratio))
+first_driver_50_shots.sort(key=lambda x: x.off_target)
+furthest_off = first_driver_50_shots[first_driver_50-1]
+first_driver_50_off_target_pixels = abs(int(furthest_off.get_off_target() * pixel_ratio))
+
+first_driver_75 = int(3 * (num_simulations-1) / 4)
+first_driver_75_shots = distance_from_center_driver[0:first_driver_75]
+first_driver_75_shots.sort(key=lambda x: x.distance_from_average)
+furthest_distance = first_driver_75_shots[first_driver_75-1]
+first_driver_75_distance_from_average_pixels = abs(int(furthest_distance.get_distance_from_average() * pixel_ratio))
+first_driver_75_shots.sort(key=lambda x: x.off_target)
+furthest_off = first_driver_75_shots[first_driver_75-1]
+first_driver_75_off_target_pixels = abs(int(furthest_off.get_off_target() * pixel_ratio))
+
+first_driver_98 = int(98 * (num_simulations-1) / 100)
+first_driver_98_shots = distance_from_center_driver[0:first_driver_98]
+first_driver_98_shots.sort(key=lambda x: x.distance_from_average)
+furthest_distance = first_driver_98_shots[first_driver_98-1]
+first_driver_98_distance_from_average_pixels = abs(int(furthest_distance.get_distance_from_average() * pixel_ratio))
+first_driver_98_shots.sort(key=lambda x: x.off_target)
+furthest_off = first_driver_98_shots[first_driver_98-1]
+first_driver_98_off_target_pixels = abs(int(furthest_off.get_off_target() * pixel_ratio))
+
+print(first_driver_50_off_target_pixels)
+print(first_driver_50_distance_from_average_pixels)
+print(first_driver_75_off_target_pixels)
+print(first_driver_75_distance_from_average_pixels)
+print(first_driver_98_off_target_pixels)
+print(first_driver_98_distance_from_average_pixels)
+
 # now the 2i
-first_50 = distance_from_center_2i[int((len(distance_from_center_2i)-1) / 2)]
-first_75 = distance_from_center_2i[int(3 * (len(distance_from_center_2i)-1) / 4)]
-first_98 = distance_from_center_2i[int(98 * (len(distance_from_center_2i) - 1) / 100)]
-cv2.circle(img, (341, height-80-int(250*pixel_ratio)), int(first_50*pixel_ratio), (250,250,250), 10)
-cv2.circle(img, (341, height-80-int(250*pixel_ratio)), int(first_75*pixel_ratio), (250,250,250), 10)
-cv2.circle(img, (341, height-80-int(250*pixel_ratio)), int(first_98*pixel_ratio), (250,250,250), 10)
+first_2i_50 = int(num_simulations/2)
+first_2i_50_shots = distance_from_center_2i[0:first_2i_50]
+first_2i_50_shots.sort(key=lambda x: x.distance_from_average)
+furthest_distance = first_2i_50_shots[first_2i_50-1]
+first_2i_50_distance_from_average_pixels = abs(int(furthest_distance.get_distance_from_average() * pixel_ratio))
+first_2i_50_shots.sort(key=lambda x: x.off_target)
+furthest_off = first_2i_50_shots[first_2i_50-1]
+first_2i_50_off_target_pixels = abs(int(furthest_off.get_off_target() * pixel_ratio))
+
+first_2i_75 = int(3 * (num_simulations-1) / 4)
+first_2i_75_shots = distance_from_center_2i[0:first_2i_75]
+first_2i_75_shots.sort(key=lambda x: x.distance_from_average)
+furthest_distance = first_2i_75_shots[first_2i_75-1]
+first_2i_75_distance_from_average_pixels = abs(int(furthest_distance.get_distance_from_average() * pixel_ratio))
+first_2i_75_shots.sort(key=lambda x: x.off_target)
+furthest_off = first_2i_75_shots[first_2i_75-1]
+first_2i_75_off_target_pixels = abs(int(furthest_off.get_off_target() * pixel_ratio))
+
+first_2i_98 = int(98 * (num_simulations-1) / 100)
+first_2i_98_shots = distance_from_center_2i[0:first_2i_98]
+first_2i_98_shots.sort(key=lambda x: x.distance_from_average)
+furthest_distance = first_2i_98_shots[first_2i_98-1]
+first_2i_98_distance_from_average_pixels = abs(int(furthest_distance.get_distance_from_average() * pixel_ratio))
+first_2i_98_shots.sort(key=lambda x: x.off_target)
+furthest_off = first_2i_98_shots[first_2i_98-1]
+first_2i_98_off_target_pixels = abs(int(furthest_off.get_off_target() * pixel_ratio))
+
+print(first_2i_50_off_target_pixels)
+print(first_2i_50_distance_from_average_pixels)
+print(first_2i_75_off_target_pixels)
+print(first_2i_75_distance_from_average_pixels)
+print(first_2i_98_off_target_pixels)
+print(first_2i_98_distance_from_average_pixels)
+
+cv2.ellipse(img, (341, height-80-int(250*pixel_ratio)), (first_2i_50_off_target_pixels, first_2i_50_distance_from_average_pixels), 0, 0, 360, (0,0,0), 10)
+cv2.ellipse(img, (341, height-80-int(250*pixel_ratio)), (first_2i_75_off_target_pixels, first_2i_75_distance_from_average_pixels), 0, 0, 360, (0,0,0), 10)
+cv2.ellipse(img, (341, height-80-int(250*pixel_ratio)), (first_2i_98_off_target_pixels, first_2i_98_distance_from_average_pixels), 0, 0, 360, (0,0,0), 10)
+
+cv2.ellipse(img, (341, height-80-int(300*pixel_ratio)), (first_driver_50_off_target_pixels, first_driver_50_distance_from_average_pixels), 0, 0, 360, (0,0,0), 10)
+cv2.ellipse(img, (341, height-80-int(300*pixel_ratio)), (first_driver_75_off_target_pixels, first_driver_75_distance_from_average_pixels), 0, 0, 360, (0,0,0), 10)
+cv2.ellipse(img, (341, height-80-int(300*pixel_ratio)), (first_driver_98_off_target_pixels, first_driver_98_distance_from_average_pixels), 0, 0, 360, (0,0,0), 10)
+
 cv2.imshow('Simulation Results', img)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
+
+# window = tkinter.Tk()
+# height, width, no_channels = img.shape
+# canvas = tkinter.Canvas(window, width=width, height=height)
+# canvas.pack()
+# photo = PIL.ImageTk.PhotoImage(image=PIL.Image.fromarray(img))
+# canvas.create_image(0,0,image=photo,anchor=tkinter.NW)
+# window.mainloop()
