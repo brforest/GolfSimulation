@@ -27,7 +27,7 @@ class Shot:
 
 hole_length = 380
 pixel_ratio = 7.4265734265
-img = cv2.imread('images/Hole 18 Riverview/Hole 18 Riverview.jpg')
+img = cv2.cvtColor(cv2.imread('images/Hole 18 Riverview/Hole 18 Riverview.jpg'), cv2.COLOR_BGR2RGB)
 height, width, channels = img.shape
 statistics = {
     "fairway_50-75": 2.95,
@@ -244,14 +244,21 @@ cv2.ellipse(img, (341, height-80-int(300*pixel_ratio)), (first_driver_50_off_tar
 cv2.ellipse(img, (341, height-80-int(300*pixel_ratio)), (first_driver_75_off_target_pixels, first_driver_75_distance_from_average_pixels), 0, 0, 360, (0,0,0), 10)
 cv2.ellipse(img, (341, height-80-int(300*pixel_ratio)), (first_driver_98_off_target_pixels, first_driver_98_distance_from_average_pixels), 0, 0, 360, (0,0,0), 10)
 
-cv2.imshow('Simulation Results', img)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+# cv2.imshow('Simulation Results', img)
+# cv2.waitKey(0)
+# cv2.destroyAllWindows()
 
-# window = tkinter.Tk()
-# height, width, no_channels = img.shape
-# canvas = tkinter.Canvas(window, width=width, height=height)
-# canvas.pack()
-# photo = PIL.ImageTk.PhotoImage(image=PIL.Image.fromarray(img))
-# canvas.create_image(0,0,image=photo,anchor=tkinter.NW)
-# window.mainloop()
+scale_percent = 30 # percent of original size
+width = int(img.shape[1] * scale_percent / 100)
+height = int(img.shape[0] * scale_percent / 100)
+dim = (width, height)
+# resize image
+img = cv2.resize(img, dim, interpolation = cv2.INTER_AREA) 
+
+window = tkinter.Tk()
+height, width, no_channels = img.shape
+canvas = tkinter.Canvas(window, width=width, height=height)
+canvas.pack()
+photo = PIL.ImageTk.PhotoImage(image=PIL.Image.fromarray(img))
+canvas.create_image(0,0,image=photo,anchor=tkinter.NW)
+window.mainloop()
